@@ -1,7 +1,6 @@
 [workspace]
 resolver = "3"
 members = [
-  "easy",
-  "medium",
-  "hard"
+  "easy/wordfrequency",
+  "easy/csvstats"
 ]

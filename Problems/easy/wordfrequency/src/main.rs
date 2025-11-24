@@ -46,24 +46,22 @@ fn search(query: Option<&str>, contents: &str) -> Result<HashMap<String, usize>,
     // Initializing empty HashMap
     let mut map: HashMap<String, usize> = HashMap::new();
 
+    if contents.trim().is_empty() {
+        return Err("File is empty!".to_string());
+    };
     match query {
         // If query exists only search and count it
         Some(q) => {
-            if contents.is_empty() {
-                return Err("File is empty!".to_string());
-            };
-            let count = contents.matches(q).count();
-
-            map.insert(q.to_string(), count);
+            for word in contents.split_whitespace() {
+                if word == q {
+                    *map.entry(q.to_owned()).or_default() += 1;
+                }
+            }
 
             Ok(map)
         }
         // If query doesn't exist count every occurrence of each word
         _ => {
-            if contents.is_empty() {
-                return Err("File is empty!".to_string());
-            };
-
             for word in contents.split_whitespace() {
                 *map.entry(word.to_owned()).or_default() += 1;
             }
@@ -73,22 +71,31 @@ fn search(query: Option<&str>, contents: &str) -> Result<HashMap<String, usize>,
     }
 }
 
+fn print_top_n(counts: &HashMap<String, usize>, n: usize) {
+    let mut items: Vec<_> = counts.iter().collect();
+
+    // Sort by count desc, then word asc for determinism
+    items.sort_by(|(w1, c1), (w2, c2)| c2.cmp(c1).then_with(|| w1.cmp(w2)));
+
+    for (word, count) in items.into_iter().take(n) {
+        println!("{word}: {count}");
+    }
+}
+
 // runs the application
 fn execute(config: Config) -> Result<(), Box<dyn Error>> {
     // Reads file contents as a string
-    let file: String = fs::read_to_string(config.path)?
+    let file: String = fs::read_to_string(&config.path)?
         .to_lowercase()
         .chars()
-        .filter(|c| !c.is_ascii_punctuation())
+        .map(|c| if c.is_ascii_punctuation() { ' ' } else { c })
         .collect();
 
     // applies the search function
     let results = search(config.query.as_deref(), &file);
 
     // Prints the word and count
-    for (word, count) in results? {
-        println!("{word}: {count}");
-    }
+    print_top_n(&results?, 20);
 
     Ok(())
 }
@@ -97,12 +104,12 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let config = Config::new(&args).unwrap_or_else(|err| {
-        println!("Problem parsing arguments: {err}");
+        eprintln!("Problem parsing arguments: {err}");
         process::exit(1);
     });
 
     if let Err(e) = execute(config) {
-        println!("Application error: {e}");
+        eprintln!("Application error: {e}");
         process::exit(1);
     }
 }
