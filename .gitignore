@@ -1,0 +1,20 @@
+target/
+
+**/*.rs.bk
+
+.rustup/
+.cargo/
+.clippy.toml
+rustfmt.toml
+
+# VS Code
+.vscode/
+*.code-workspace
+
+.DS_Store
+Thumbs.db
+
+*.log
+*.tmp
+*.swp
+*.swo

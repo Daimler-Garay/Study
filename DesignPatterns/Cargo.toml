@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "idioms",
+    "design_patterns",
+    "anti_patterns",
+    "functional_programming",
+]
