@@ -34,6 +34,38 @@
 // Max 99.99
 // Mean: 34.56
 // Std dev: 12.34
+
+#[allow(unused_imports)]
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
+
+struct CsvReader {
+    path: String,
+    column: Option<String>,
+}
+
+impl CsvReader {
+    fn new(path: String, column: Option<String>) -> Result<CsvReader, String> {
+        Ok(CsvReader { path, column })
+    }
+}
+
+fn read_header(config: CsvReader) -> io::Result<Vec<String>> {
+    let file = File::open(&config.path)?;
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        let line = line?;
+        if !line.trim().is_empty() {
+            return Ok(line.split(',').map(|s| s.trim().to_string()).collect());
+        }
+    }
+
+    Ok(Vec::new())
+}
+
 fn main() {
-    println!("Hello, world!");
+    let init = CsvReader::new("./track_data_final.csv".to_string(), None);
+    let header = read_header(init.unwrap());
+    println!("{:#?}", header);
 }
